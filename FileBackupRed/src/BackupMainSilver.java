@@ -21,26 +21,25 @@ public class BackupMainSilver
     
     public static void main(String[] args) throws Exception 
     {
-    	List<String> list=new ArrayList<String>();
+    	List<String> listFilePath=new ArrayList<String>();
+    	
     	
     	String onward = "N"; // Read user input
+    	
     	
     	try (Scanner myObj = new Scanner(System.in)) {
 			{
 
 				while (!onward.equalsIgnoreCase("Y"))
 				{
-					list.add (selectDirectory(args));
-					 System.out.println("end Y/N");
-					 onward = myObj.next();
+					listFilePath.add(selectDirectory(args));				
+					System.out.println("end Y/N");
+					onward = myObj.next();
 				}
 				
 				System.out.println("ending list");
 				
 				String destination = selectDirectory(args);;
-				
-				
-					 
 				System.out.println("Starting backup");
 				String TimeOfDay = dtf.format(LocalDateTime.now());
 				String MainBackupDirectory = (destination + TimeOfDay);
@@ -49,13 +48,17 @@ public class BackupMainSilver
 
 				int numFiles = 0;
 				
-				for (String FileName: list)
+				for (String FilePath: listFilePath)
 				{
-				    FileOutputStream fos = new FileOutputStream(MainBackupDirectory + "\\" + ".zip");
+					File fileToZip = new File(FilePath);
+	
+					String listFileName = fileToZip.getName();
+					
+				    FileOutputStream fos = new FileOutputStream(MainBackupDirectory + "\\" + listFileName + ".zip");
 				    ZipOutputStream zipOut = new ZipOutputStream(fos);
-				    File fileToZip = new File(FileName);
 
 				    numFiles += zipFile(fileToZip, fileToZip.getName(), zipOut);
+				    
 				    zipOut.close();
 				    fos.close();
 				}
