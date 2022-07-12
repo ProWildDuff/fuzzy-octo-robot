@@ -14,6 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.swing.JFileChooser;
+import javax.swing.UIManager;
 
 public class BackupMainSilver 
 {
@@ -21,51 +22,63 @@ public class BackupMainSilver
     
     public static void main(String[] args) throws Exception 
     {
+    	try {
+    		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    	} 
+    	catch (Exception e) {}
+    	
     	List<String> listFilePath=new ArrayList<String>();
     	
-    	
-    	String onward = "N"; // Read user input
-    	
-    	
-    	try (Scanner myObj = new Scanner(System.in)) {
-			{
-
-				while (!onward.equalsIgnoreCase("Y"))
+    	try (Scanner myObj = new Scanner(System.in)) 
+    	{
+    		do
+    		{
+    			String path = selectDirectory(args);
+				if(path == null)
 				{
-					listFilePath.add(selectDirectory(args));				
-					System.out.println("end Y/N");
-					onward = myObj.next();
+					System.out.println("Selection aborted. Proceeding to zipping");
+					break;
 				}
+				listFilePath.add(path);				
+				System.out.println("end Y/N");
+    		}
+			while (!myObj.next().equalsIgnoreCase("Y"));
+    		myObj.close();
 				
-				System.out.println("ending list");
-				
-				String destination = selectDirectory(args);;
-				System.out.println("Starting backup");
-				String TimeOfDay = dtf.format(LocalDateTime.now());
-				String MainBackupDirectory = (destination + TimeOfDay);
-				
-				new File(destination + TimeOfDay).mkdirs();
+			if(listFilePath.size() > 0)
+			{
+				System.out.println("Ending list. Starting backup");
+				String backupDir = selectDirectory(args);
+				if(backupDir == null)
+				{
+					System.out.println("Destination selection aborted. Exiting...");
+					return;
+				}
+				String MainBackupDirectory = backupDir + dtf.format(LocalDateTime.now());
+					
+				new File(MainBackupDirectory).mkdirs();
 
 				int numFiles = 0;
-				
+					
 				for (String FilePath: listFilePath)
 				{
 					File fileToZip = new File(FilePath);
-	
+		
 					String listFileName = fileToZip.getName();
-					
-				    FileOutputStream fos = new FileOutputStream(MainBackupDirectory + "\\" + listFileName + ".zip");
-				    ZipOutputStream zipOut = new ZipOutputStream(fos);
+						
+					FileOutputStream fos = new FileOutputStream(MainBackupDirectory + "\\" + listFileName + ".zip");
+					ZipOutputStream zipOut = new ZipOutputStream(fos);
 
-				    numFiles += zipFile(fileToZip, fileToZip.getName(), zipOut);
-				    
-				    zipOut.close();
-				    fos.close();
+					numFiles += zipFile(fileToZip, listFileName, zipOut);
+					    
+					zipOut.close();
+					fos.close();
 				}
 				System.out.println("Backup finished. Zipped " + numFiles + " files");
-				}
+			}
+				
 		}
-		}
+	}
 
     private static int zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException 
     {
@@ -89,17 +102,19 @@ public class BackupMainSilver
         }
     }
     
-	public static String selectDirectory(String[] args) {
+	public static String selectDirectory(String[] args) 
+	{
 		String filePath;
 		
 		JFileChooser chooser = new JFileChooser();
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		int returnVal = chooser.showOpenDialog(chooser);
-		if(returnVal == JFileChooser.APPROVE_OPTION) {
-		   System.out.println("You chose to open this directory: " +
-		        chooser.getSelectedFile().getAbsolutePath());
+		chooser.setDialogTitle("Select a directory to zip");
+		if(chooser.showOpenDialog(chooser) == JFileChooser.APPROVE_OPTION) 
+		{
+			filePath = chooser.getSelectedFile().getAbsolutePath();
+			System.out.println("You chose to open this directory: " + filePath);
+			return filePath;
+		}
+		return null;
 	}
-		filePath = chooser.getSelectedFile().getAbsolutePath();
-		return filePath;
-}
 }
